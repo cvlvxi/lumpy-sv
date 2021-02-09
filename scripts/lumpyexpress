@@ -120,7 +120,7 @@ options:
      -K FILE  path to lumpyexpress.config file
                 (default: same directory as lumpyexpress)
      -v       verbose
-	 -s INT.FLOAT Subsample proportion flag to samtools for split and discordant reads
+     -s \"INT.FLOAT\" Subsample proportion flag to samtools view for split and discordant reads. See: http://www.htslib.org/doc/samtools-view.html for details 
      -h       show this message
 "
 }
