@@ -120,7 +120,7 @@ options:
      -K FILE  path to lumpyexpress.config file
                 (default: same directory as lumpyexpress)
      -v       verbose
-     -s \"INT.FLOAT\" Subsample proportion flag to samtools view for split and discordant reads. See: http://www.htslib.org/doc/samtools-view.html for details 
+     -s \"INT.FLOAT\" Subsample proportion flag to samtools view for discordant reads. See: http://www.htslib.org/doc/samtools-view.html for details 
      -h       show this message
 "
 }
@@ -147,7 +147,7 @@ REF_ARG=""
 SPL_BAM_STRING=""
 DISC_BAM_STRING=""
 DEPTH_BED_STRING=""
-SUBSAMPLE_SAMTOOLS=""
+SUBSAMPLE_DISCORDANT_READS=""
 
 while getopts ":hB:S:s:D:R:d:o:m:r:x:T:t:PAdgkvK:" OPTION
 
@@ -164,7 +164,7 @@ do
 	    SPL_BAM_STRING="$OPTARG"
 	    ;;
 	s)
-		SUBSAMPLE_SAMTOOLS="$OPTARG"
+		SUBSAMPLE_DISCORDANT_READS="$OPTARG"
 		;;
 	D)
 	    DISC_BAM_STRING="$OPTARG"
@@ -406,11 +406,11 @@ then
 
 	    # generate discordant pair string for LUMPY
 	    DISC_BAM=$TEMP_DIR/$OUTBASE.sample$(($i+1)).discordants.bam
-		if [ -z $SUBSAMPLE_SAMTOOLS ];
+		if [ -z $SUBSAMPLE_DISCORDANT_READS ];
 		then
 	    	DISC_SAMPLE=`$SAMT view $EXT_OPT -H $FULL_BAM | grep -m 1 "^@RG" | gawk -v i=$i '{ for (j=1;j<=NF;++j) {if ($j~"^SM:") { gsub("^SM:","",$j); print $j } } }'`
 		else
-	    	DISC_SAMPLE=`$SAMT view -s $SUBSAMPLE_SAMTOOLS $EXT_OPT -H $FULL_BAM | grep -m 1 "^@RG" | gawk -v i=$i '{ for (j=1;j<=NF;++j) {if ($j~"^SM:") { gsub("^SM:","",$j); print $j } } }'`
+	    	DISC_SAMPLE=`$SAMT view -s $SUBSAMPLE_DISCORDANT_READS $EXT_OPT -H $FULL_BAM | grep -m 1 "^@RG" | gawk -v i=$i '{ for (j=1;j<=NF;++j) {if ($j~"^SM:") { gsub("^SM:","",$j); print $j } } }'`
 		fi
 
 	    RG_STRING=`echo "${LIB_RG_LIST[$j]}" | sed 's/,/,read_group:/g' | sed 's/^/read_group:/g'`
@@ -420,13 +420,7 @@ then
 
 	    # generate split-read string for LUMPY
 	    SPL_BAM=$TEMP_DIR/$OUTBASE.sample$(($i+1)).splitters.bam
-		if [ -z $SUBSAMPLE_SAMTOOLS ];
-		then
-	    	SPL_SAMPLE=`$SAMT view $EXT_OPT -H $FULL_BAM | grep -m 1 "^@RG" | gawk -v i=$i '{ for (j=1;j<=NF;++j) {if ($j~"^SM:") { gsub("^SM:","",$j); print $j } } }'`
-		else
-        	SPL_SAMPLE=`$SAMT view -s $SUBSAMPLE_SAMTOOLS $EXT_OPT -H $FULL_BAM | grep -m 1 "^@RG" | gawk -v i=$i '{ for (j=1;j<=NF;++j) {if ($j~"^SM:") { gsub("^SM:","",$j); print $j } } }'`
-		fi
-
+	    SPL_SAMPLE=`$SAMT view $EXT_OPT -H $FULL_BAM | grep -m 1 "^@RG" | gawk -v i=$i '{ for (j=1;j<=NF;++j) {if ($j~"^SM:") { gsub("^SM:","",$j); print $j } } }'`
 	    LUMPY_SPL_STRING="$LUMPY_SPL_STRING -sr bam_file:${SPL_BAM},back_distance:10,min_mapping_threshold:20,weight:1,id:${SPL_SAMPLE},min_clip:20,${RG_STRING}"
 	done
 
@@ -504,12 +498,7 @@ else
 	echo "done"
 
 	# construct LUMPY_SPL_STRING
-	if [ -z $SUBSAMPLE_SAMTOOLS ];
-	then
-		SPL_SAMPLE=`$SAMT view -H $SPL_BAM | grep -m 1 "^@RG" | gawk -v i=$i '{ for (j=1;j<=NF;++j) {if ($j~"^SM:") { gsub("^SM:","",$j); print $j } } }'`
-	else
-		SPL_SAMPLE=`$SAMT view -s $SUBSAMPLE_SAMTOOLS -H $SPL_BAM | grep -m 1 "^@RG" | gawk -v i=$i '{ for (j=1;j<=NF;++j) {if ($j~"^SM:") { gsub("^SM:","",$j); print $j } } }'`
-	fi;
+	SPL_SAMPLE=`$SAMT view -H $SPL_BAM | grep -m 1 "^@RG" | gawk -v i=$i '{ for (j=1;j<=NF;++j) {if ($j~"^SM:") { gsub("^SM:","",$j); print $j } } }'`
 
 	LUMPY_SPL_STRING="$LUMPY_SPL_STRING -sr bam_file:${SPL_BAM},back_distance:10,min_mapping_threshold:20,weight:1,id:${SPL_SAMPLE},min_clip:20"
 
@@ -518,11 +507,11 @@ else
 	do
 	    echo $(( ${#FULL_BAM_LIST[@]}-1 ))
 	    DISC_BAM=${DISC_BAM_LIST[$i]}
-		if [ -z $SUBSAMPLE_SAMTOOLS ];
+		if [ -z $SUBSAMPLE_DISCORDANT_READS ];
 		then
 	    	DISC_SAMPLE=`$SAMT view -H $DISC_BAM | grep -m 1 "^@RG" | gawk -v i=$i '{ for (j=1;j<=NF;++j) {if ($j~"^SM:") { gsub("^SM:","",$j); print $j } } }'`
 		else
-	    	DISC_SAMPLE=`$SAMT view s $SUBSAMPLE_SAMTOOLS  -H $DISC_BAM | grep -m 1 "^@RG" | gawk -v i=$i '{ for (j=1;j<=NF;++j) {if ($j~"^SM:") { gsub("^SM:","",$j); print $j } } }'`
+	    	DISC_SAMPLE=`$SAMT view s $SUBSAMPLE_DISCORDANT_READS  -H $DISC_BAM | grep -m 1 "^@RG" | gawk -v i=$i '{ for (j=1;j<=NF;++j) {if ($j~"^SM:") { gsub("^SM:","",$j); print $j } } }'`
         fi
 	    MEAN=`cat ${TEMP_DIR}/$OUTBASE.sample$(($i+1)).lib$(($j+1)).insert.stats | tr '\t' '\n' | grep "^mean" | sed 's/mean\://g'`
 	    STDEV=`cat ${TEMP_DIR}/$OUTBASE.sample$(($i+1)).lib$(($j+1)).insert.stats | tr '\t' '\n' | grep "^stdev" | sed 's/stdev\://g'`
