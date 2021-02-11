@@ -410,7 +410,7 @@ then
 		then
 	    	DISC_SAMPLE=`$SAMT view $EXT_OPT -H $FULL_BAM | grep -m 1 "^@RG" | gawk -v i=$i '{ for (j=1;j<=NF;++j) {if ($j~"^SM:") { gsub("^SM:","",$j); print $j } } }'`
 		else
-	    	DISC_SAMPLE=`$SAMT view -s $SUBSAMPLE_DISCORDANT_READS $EXT_OPT -H $FULL_BAM | grep -m 1 "^@RG" | gawk -v i=$i '{ for (j=1;j<=NF;++j) {if ($j~"^SM:") { gsub("^SM:","",$j); print $j } } }'`
+	    	DISC_SAMPLE=`$SAMTOOLS view -s $SUBSAMPLE_DISCORDANT_READS $EXT_OPT -H $FULL_BAM | grep -m 1 "^@RG" | gawk -v i=$i '{ for (j=1;j<=NF;++j) {if ($j~"^SM:") { gsub("^SM:","",$j); print $j } } }'`
 		fi
 
 	    RG_STRING=`echo "${LIB_RG_LIST[$j]}" | sed 's/,/,read_group:/g' | sed 's/^/read_group:/g'`
@@ -511,7 +511,7 @@ else
 		then
 	    	DISC_SAMPLE=`$SAMT view -H $DISC_BAM | grep -m 1 "^@RG" | gawk -v i=$i '{ for (j=1;j<=NF;++j) {if ($j~"^SM:") { gsub("^SM:","",$j); print $j } } }'`
 		else
-	    	DISC_SAMPLE=`$SAMT view s $SUBSAMPLE_DISCORDANT_READS  -H $DISC_BAM | grep -m 1 "^@RG" | gawk -v i=$i '{ for (j=1;j<=NF;++j) {if ($j~"^SM:") { gsub("^SM:","",$j); print $j } } }'`
+	    	DISC_SAMPLE=`$SAMTOOLS view -s $SUBSAMPLE_DISCORDANT_READS  -H $DISC_BAM | grep -m 1 "^@RG" | gawk -v i=$i '{ for (j=1;j<=NF;++j) {if ($j~"^SM:") { gsub("^SM:","",$j); print $j } } }'`
         fi
 	    MEAN=`cat ${TEMP_DIR}/$OUTBASE.sample$(($i+1)).lib$(($j+1)).insert.stats | tr '\t' '\n' | grep "^mean" | sed 's/mean\://g'`
 	    STDEV=`cat ${TEMP_DIR}/$OUTBASE.sample$(($i+1)).lib$(($j+1)).insert.stats | tr '\t' '\n' | grep "^stdev" | sed 's/stdev\://g'`
